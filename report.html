@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Fit — Relatório Financeiro Abril/2026</title>
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-light: #f0d060;
+      --dark: #0a0a0f;
+      --dark2: #111118;
+      --card: rgba(255,255,255,0.04);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--dark);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+    }
+    /* Aurora background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 20% 50%, rgba(212,175,55,0.04) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(100,50,200,0.03) 0%, transparent 50%),
+                  radial-gradient(ellipse at 60% 80%, rgba(50,150,100,0.03) 0%, transparent 50%);
+      animation: aurora 20s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes aurora {
+      0% { transform: translate(0,0) rotate(0deg); }
+      100% { transform: translate(3%,3%) rotate(5deg); }
+    }
+
+    .header {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(0,0,0,0) 100%);
+      border-bottom: 1px solid rgba(212,175,55,0.3);
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 { color: var(--gold); font-size: 1.6rem; letter-spacing: 2px; }
+    .header .period { color: #888; font-size: 0.9rem; }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid rgba(212,175,55,0.4);
+      color: var(--gold);
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(212,175,55,0.1); }
+
+    .slides-nav {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 8px;
+      padding: 20px 40px;
+      overflow-x: auto;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: #888;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: rgba(212,175,55,0.15);
+      border-color: rgba(212,175,55,0.5);
+      color: var(--gold);
+    }
+
+    .slide { display: none; position: relative; z-index: 1; padding: 40px; max-width: 1100px; margin: 0 auto; }
+    .slide.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .slide-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .slide-subtitle { color: #777; font-size: 0.95rem; margin-bottom: 32px; }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 28px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 28px; }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid rgba(212,175,55,0.2);
+      border-radius: 14px;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: linear-gradient(180deg, var(--gold), transparent);
+    }
+    .kpi-label { color: #777; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .kpi-value { font-size: 2rem; font-weight: 700; color: #fff; }
+    .kpi-value.green { color: #51cf66; }
+    .kpi-value.red { color: #ff6b6b; }
+    .kpi-value.gold { color: var(--gold); }
+    .kpi-delta { font-size: 0.82rem; margin-top: 6px; color: #555; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 24px 28px;
+    }
+    .card h3 { color: var(--gold); font-size: 1rem; margin-bottom: 16px; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    td { padding: 10px 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:last-child td { border-bottom: none; }
+    .pos { color: #51cf66; }
+    .neg { color: #ff6b6b; }
+
+    .progress-bar { background: rgba(255,255,255,0.08); border-radius: 8px; height: 8px; margin-top: 6px; }
+    .progress-fill { height: 8px; border-radius: 8px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+
+    .footer-nav {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 32px;
+    }
+    .footer-nav button {
+      background: rgba(212,175,55,0.15);
+      border: 1px solid rgba(212,175,55,0.4);
+      color: var(--gold);
+      padding: 10px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .footer-nav button:hover { background: rgba(212,175,55,0.25); }
+    .slide-indicator { color: #666; font-size: 0.85rem; display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>PLANO FIT — RELATÓRIO FINANCEIRO</h1>
+    <div class="period">Abril / 2026 | Conforme Pactado</div>
+  </div>
+  <button class="logout-btn" onclick="logout()">Sair</button>
+</div>
+
+<div class="slides-nav" id="slides-nav"></div>
+
+<!-- SLIDE 1: Visão Geral -->
+<div class="slide active" id="slide-1">
+  <div class="slide-title">01. Visão Geral do Mês</div>
+  <div class="slide-subtitle">Resumo executivo dos resultados de Abril/2026</div>
+  <div class="grid-3">
+    <div class="kpi">
+      <div class="kpi-label">Receita Bruta</div>
+      <div class="kpi-value gold">R$ 128.450</div>
+      <div class="kpi-delta">↑ 12% vs. março</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Despesas Totais</div>
+      <div class="kpi-value">R$ 87.320</div>
+      <div class="kpi-delta">↓ 3% vs. março</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Lucro Líquido</div>
+      <div class="kpi-value green">R$ 41.130</div>
+      <div class="kpi-delta">↑ 38% vs. março</div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="kpi">
+      <div class="kpi-label">Margem de Lucro</div>
+      <div class="kpi-value gold">32%</div>
+      <div class="kpi-delta">Meta: 30% ✓</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Novos Alunos</div>
+      <div class="kpi-value">47</div>
+      <div class="kpi-delta">Meta: 40 ↑ 17%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-value green">3,2%</div>
+      <div class="kpi-delta">Abaixo da meta de 5%</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: Receitas -->
+<div class="slide" id="slide-2">
+  <div class="slide-title">02. Receitas</div>
+  <div class="slide-subtitle">Composição e análise das fontes de receita</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Receitas por Categoria</h3>
+      <table>
+        <thead><tr><th>Categoria</th><th>Valor</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>Planos Mensais</td><td>R$ 72.000</td><td class="pos">56%</td></tr>
+          <tr><td>Planos Trimestrais</td><td>R$ 28.000</td><td class="pos">22%</td></tr>
+          <tr><td>Planos Anuais</td><td>R$ 16.450</td><td>13%</td></tr>
+          <tr><td>Avulsos / Day Use</td><td>R$ 8.000</td><td>6%</td></tr>
+          <tr><td>Produtos / Suplementos</td><td>R$ 4.000</td><td>3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Metas vs. Realizado</h3>
+      <table>
+        <thead><tr><th>Métrica</th><th>Meta</th><th>Real</th><th>Δ</th></tr></thead>
+        <tbody>
+          <tr><td>Receita Total</td><td>R$ 115k</td><td>R$ 128k</td><td class="pos">+11%</td></tr>
+          <tr><td>Ticket Médio</td><td>R$ 180</td><td>R$ 192</td><td class="pos">+6,7%</td></tr>
+          <tr><td>Novos Alunos</td><td>40</td><td>47</td><td class="pos">+17,5%</td></tr>
+          <tr><td>Renovações</td><td>85%</td><td>91%</td><td class="pos">+6pp</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: Despesas -->
+<div class="slide" id="slide-3">
+  <div class="slide-title">03. Despesas</div>
+  <div class="slide-subtitle">Breakdown completo das despesas operacionais</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Despesas por Centro de Custo</h3>
+      <table>
+        <thead><tr><th>Item</th><th>Valor</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>Folha de Pagamento</td><td>R$ 38.500</td><td>44%</td></tr>
+          <tr><td>Aluguel / Condomínio</td><td>R$ 12.000</td><td>14%</td></tr>
+          <tr><td>Manutenção Equipamentos</td><td>R$ 8.200</td><td>9%</td></tr>
+          <tr><td>Marketing / Ads</td><td>R$ 7.500</td><td>9%</td></tr>
+          <tr><td>Energia Elétrica</td><td>R$ 4.800</td><td>6%</td></tr>
+          <tr><td>Produtos / Insumos</td><td>R$ 3.200</td><td>4%</td></tr>
+          <tr><td>Software / Sistemas</td><td>R$ 2.100</td><td>2%</td></tr>
+          <tr><td>Outros</td><td>R$ 11.020</td><td>12%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Evolução Mensal das Despesas</h3>
+      <table>
+        <thead><tr><th>Mês</th><th>Despesa</th><th>Δ</th></tr></thead>
+        <tbody>
+          <tr><td>Janeiro</td><td>R$ 91.200</td><td class="neg">—</td></tr>
+          <tr><td>Fevereiro</td><td>R$ 89.400</td><td class="pos">-2%</td></tr>
+          <tr><td>Março</td><td>R$ 90.100</td><td class="neg">+0,8%</td></tr>
+          <tr><td>Abril</td><td>R$ 87.320</td><td class="pos">-3,1%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: Fluxo de Caixa -->
+<div class="slide" id="slide-4">
+  <div class="slide-title">04. Fluxo de Caixa</div>
+  <div class="slide-subtitle">Posição financeira e projeções</div>
+  <div class="grid-3">
+    <div class="kpi">
+      <div class="kpi-label">Saldo Inicial (1/abr)</div>
+      <div class="kpi-value gold">R$ 58.200</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Entradas no Mês</div>
+      <div class="kpi-value green">+ R$ 128.450</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Saídas no Mês</div>
+      <div class="kpi-value red">- R$ 87.320</div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="kpi">
+      <div class="kpi-label">Saldo Final (30/abr)</div>
+      <div class="kpi-value green" style="font-size:2.4rem">R$ 99.330</div>
+      <div class="kpi-delta">Reserva estratégica: R$ 40.000 | Disponível: R$ 59.330</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Projeção Maio/2026</div>
+      <div class="kpi-value gold">R$ 135.000</div>
+      <div class="kpi-delta">Baseado em pipeline atual e sazonalidade positiva</div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: Alunos e Retenção -->
+<div class="slide" id="slide-5">
+  <div class="slide-title">05. Alunos & Retenção</div>
+  <div class="slide-subtitle">Análise da base de clientes e métricas de fidelização</div>
+  <div class="grid-3">
+    <div class="kpi">
+      <div class="kpi-label">Total de Alunos Ativos</div>
+      <div class="kpi-value gold">668</div>
+      <div class="kpi-delta">↑ 47 novos em abril</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Taxa de Renovação</div>
+      <div class="kpi-value green">91%</div>
+      <div class="kpi-delta">Meta: 85% — Superada</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">NPS (Net Promoter Score)</div>
+      <div class="kpi-value green">74</div>
+      <div class="kpi-delta">Referência setor: 50</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Segmentação de Planos</h3>
+    <div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Mensal (375 alunos)</span><span>56%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:56%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;margin-bottom:4px"><span>Trimestral (147 alunos)</span><span>22%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:22%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;margin-bottom:4px"><span>Anual (86 alunos)</span><span>13%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:13%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;margin-bottom:4px"><span>Day Use / Avulso (60 alunos)</span><span>9%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:9%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: Marketing -->
+<div class="slide" id="slide-6">
+  <div class="slide-title">06. Marketing & Captação</div>
+  <div class="slide-subtitle">Performance das campanhas e canais de aquisição</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Canais de Aquisição</h3>
+      <table>
+        <thead><tr><th>Canal</th><th>Alunos</th><th>CPL</th></tr></thead>
+        <tbody>
+          <tr><td>Instagram Ads</td><td>18</td><td>R$ 42</td></tr>
+          <tr><td>Google Ads</td><td>11</td><td>R$ 68</td></tr>
+          <tr><td>Indicação / Boca a Boca</td><td>14</td><td>R$ 0</td></tr>
+          <tr><td>WhatsApp / Orgânico</td><td>4</td><td>R$ 0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>ROI de Marketing</h3>
+      <table>
+        <thead><tr><th>Métrica</th><th>Valor</th></tr></thead>
+        <tbody>
+          <tr><td>Investimento total</td><td>R$ 7.500</td></tr>
+          <tr><td>Alunos adquiridos via pago</td><td>29</td></tr>
+          <tr><td>Custo por aluno (pago)</td><td>R$ 258</td></tr>
+          <tr><td>LTV médio estimado</td><td>R$ 2.160</td></tr>
+          <tr><td>ROI Marketing</td><td class="pos">+737%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: DRE Resumido -->
+<div class="slide" id="slide-7">
+  <div class="slide-title">07. DRE Resumido</div>
+  <div class="slide-subtitle">Demonstração de Resultado do Exercício — Abril/2026</div>
+  <div class="card">
+    <h3>Demonstração de Resultado</h3>
+    <table>
+      <tbody>
+        <tr style="font-size:1.05rem"><td><strong>Receita Bruta</strong></td><td style="text-align:right"><strong class="gold">R$ 128.450</strong></td><td style="text-align:right">100%</td></tr>
+        <tr><td style="padding-left:20px">(-) Impostos (Simples ~8%)</td><td style="text-align:right" class="neg">- R$ 10.276</td><td style="text-align:right">8%</td></tr>
+        <tr style="font-size:1.05rem"><td><strong>Receita Líquida</strong></td><td style="text-align:right"><strong>R$ 118.174</strong></td><td style="text-align:right">92%</td></tr>
+        <tr><td style="padding-left:20px">(-) CMV / Custo dos Serviços</td><td style="text-align:right" class="neg">- R$ 42.700</td><td style="text-align:right">33%</td></tr>
+        <tr style="font-size:1.05rem"><td><strong>Lucro Bruto</strong></td><td style="text-align:right"><strong>R$ 75.474</strong></td><td style="text-align:right">59%</td></tr>
+        <tr><td style="padding-left:20px">(-) Despesas Operacionais</td><td style="text-align:right" class="neg">- R$ 34.344</td><td style="text-align:right">27%</td></tr>
+        <tr style="font-size:1.1rem;border-top:1px solid rgba(212,175,55,0.3)"><td><strong>EBITDA / Lucro Líquido</strong></td><td style="text-align:right"><strong class="green" style="font-size:1.3rem">R$ 41.130</strong></td><td style="text-align:right" class="green"><strong>32%</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 8: Metas Maio -->
+<div class="slide" id="slide-8">
+  <div class="slide-title">08. Metas — Maio/2026</div>
+  <div class="slide-subtitle">Objetivos e plano de ação para o próximo mês</div>
+  <div class="grid-3">
+    <div class="kpi">
+      <div class="kpi-label">Receita Meta</div>
+      <div class="kpi-value gold">R$ 135.000</div>
+      <div class="kpi-delta">+5% sobre abril</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Novos Alunos Meta</div>
+      <div class="kpi-value">52</div>
+      <div class="kpi-delta">+5 sobre abril</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Lucro Meta</div>
+      <div class="kpi-value green">R$ 43.000</div>
+      <div class="kpi-delta">Margem 32%</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Ações Prioritárias</h3>
+    <table>
+      <thead><tr><th>Ação</th><th>Responsável</th><th>Prazo</th></tr></thead>
+      <tbody>
+        <tr><td>Campanha de inverno no Instagram</td><td>Marketing</td><td>01/05</td></tr>
+        <tr><td>Programa de indicação com desconto</td><td>Comercial</td><td>05/05</td></tr>
+        <tr><td>Revisão de preços planos anuais</td><td>Gestão</td><td>10/05</td></tr>
+        <tr><td>Treinamento equipe atendimento</td><td>RH</td><td>15/05</td></tr>
+        <tr><td>Auditoria de contratos vencendo</td><td>Administrativo</td><td>20/05</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 9: Conclusão -->
+<div class="slide" id="slide-9">
+  <div class="slide-title">09. Conclusão & Considerações</div>
+  <div class="slide-subtitle">Análise consolidada e perspectivas</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Destaques Positivos</h3>
+      <table>
+        <tbody>
+          <tr><td class="pos">✓</td><td>Lucro líquido acima de R$ 40k pela primeira vez</td></tr>
+          <tr><td class="pos">✓</td><td>Taxa de renovação de 91% (recorde histórico)</td></tr>
+          <tr><td class="pos">✓</td><td>Despesas operacionais reduziram 3%</td></tr>
+          <tr><td class="pos">✓</td><td>NPS de 74 — excelente satisfação</td></tr>
+          <tr><td class="pos">✓</td><td>ROI de marketing de 737%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Pontos de Atenção</h3>
+      <table>
+        <tbody>
+          <tr><td class="neg">!</td><td>Energia elétrica +12% vs. março</td></tr>
+          <tr><td class="neg">!</td><td>Equipamento de cardio com manutenção pendente</td></tr>
+          <tr><td class="neg">!</td><td>Google Ads com CPL acima da meta (R$68 vs R$50)</td></tr>
+          <tr><td style="color:#d4af37">→</td><td>Avaliar revisão do mix de planos para Q2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="kpi" style="margin-top:20px;background:rgba(212,175,55,0.08);border-color:rgba(212,175,55,0.4)">
+    <div class="kpi-label">Avaliação Geral do Mês</div>
+    <div class="kpi-value gold" style="font-size:2.4rem">EXCELENTE ★★★★★</div>
+    <div class="kpi-delta">Todos os KPIs principais superados. Projeção otimista para Q2/2026.</div>
+  </div>
+</div>
+
+<div class="footer-nav">
+  <button onclick="prevSlide()">← Anterior</button>
+  <span class="slide-indicator" id="slide-indicator">1 / 9</span>
+  <button onclick="nextSlide()">Próximo →</button>
+</div>
+
+<script>
+  // Auth check
+  fetch('/api/check').then(r => r.json()).then(d => {
+    if (!d.ok) window.location.href = '/';
+  }).catch(() => {});
+
+  const slides = document.querySelectorAll('.slide');
+  const navContainer = document.getElementById('slides-nav');
+  const titles = ['Visão Geral','Receitas','Despesas','Fluxo de Caixa','Alunos','Marketing','DRE','Metas','Conclusão'];
+  let current = 0;
+
+  titles.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = (i+1).toString().padStart(2,'0') + '. ' + t;
+    btn.onclick = () => goTo(i);
+    navContainer.appendChild(btn);
+  });
+
+  function goTo(i) {
+    slides[current].classList.remove('active');
+    document.querySelectorAll('.nav-btn')[current].classList.remove('active');
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides[current].classList.add('active');
+    document.querySelectorAll('.nav-btn')[current].classList.add('active');
+    document.getElementById('slide-indicator').textContent = (current+1) + ' / ' + slides.length;
+  }
+
+  function nextSlide() { goTo(current + 1); }
+  function prevSlide() { goTo(current - 1); }
+
+  function logout() {
+    document.cookie = 'pf_session=; Max-Age=0; Path=/';
+    window.location.href = '/';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+  });
+</script>
+</body>
+</html>
