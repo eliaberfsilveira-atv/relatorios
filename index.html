@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Fit — Acesso ao Relatório</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0a;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(212,175,55,0.1);
+    }
+    h1 { color: #d4af37; font-size: 1.8rem; margin-bottom: 8px; }
+    p { color: #888; font-size: 0.95rem; margin-bottom: 32px; }
+    .status { font-size: 1rem; padding: 16px; border-radius: 8px; margin-top: 16px; }
+    .status.loading { color: #d4af37; background: rgba(212,175,55,0.1); }
+    .status.error { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+    .status.success { color: #51cf66; background: rgba(81,207,102,0.1); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Plano Fit</h1>
+    <p>Relatório Financeiro Exclusivo</p>
+    <div id="status" class="status loading">Verificando seu acesso...</div>
+  </div>
+  <script>
+    const statusEl = document.getElementById('status');
+    const params   = new URLSearchParams(window.location.search);
+    const token    = params.get('t');
+
+    if (!token) {
+      statusEl.className = 'status error';
+      statusEl.textContent = 'Link inválido. Solicite um novo acesso.';
+    } else {
+      fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          statusEl.className = 'status success';
+          statusEl.textContent = 'Bem-vindo(a), ' + data.name + '! Redirecionando...';
+          setTimeout(() => { window.location.href = '/report'; }, 1500);
+        } else {
+          statusEl.className = 'status error';
+          statusEl.textContent = data.error || 'Acesso negado.';
+        }
+      })
+      .catch(() => {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Erro ao verificar acesso. Tente novamente.';
+      });
+    }
+  </script>
+</body>
+</html>
