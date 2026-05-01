@@ -1,0 +1,8 @@
+{
+  "name": "plano-fit-relatorios",
+  "version": "1.0.0",
+  "dependencies": {
+    "@vercel/kv": "^2.0.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
