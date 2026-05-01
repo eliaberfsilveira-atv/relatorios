@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Fit — Painel Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; }
+    .header { background: rgba(212,175,55,0.1); border-bottom: 1px solid rgba(212,175,55,0.3); padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+    .header h1 { color: #d4af37; font-size: 1.4rem; }
+    .container { max-width: 900px; margin: 0 auto; padding: 32px; }
+    .login-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 40px; max-width: 400px; margin: 60px auto; }
+    .login-card h2 { color: #d4af37; margin-bottom: 24px; text-align: center; }
+    input, button { width: 100%; padding: 12px 16px; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+    input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+    input::placeholder { color: #666; }
+    .btn-primary { background: #d4af37; border: none; color: #000; font-weight: bold; cursor: pointer; }
+    .btn-primary:hover { background: #e6c547; }
+    .btn-danger { background: rgba(255,107,107,0.2); border: 1px solid rgba(255,107,107,0.5); color: #ff6b6b; cursor: pointer; padding: 6px 14px; font-size: 0.85rem; width: auto; border-radius: 6px; }
+    .section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .section h2 { color: #d4af37; font-size: 1.1rem; margin-bottom: 20px; }
+    .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
+    .form-row input { margin-bottom: 0; }
+    .form-row button { width: auto; white-space: nowrap; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 0.88rem; }
+    th { color: #d4af37; font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+    .badge.active { background: rgba(81,207,102,0.2); color: #51cf66; }
+    .badge.revoked { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+    .link-box { background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 12px 16px; margin-top: 12px; word-break: break-all; font-size: 0.85rem; color: #d4af37; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab { padding: 8px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #888; cursor: pointer; font-size: 0.9rem; }
+    .tab.active { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.5); color: #d4af37; }
+    .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9rem; }
+    .msg.success { background: rgba(81,207,102,0.1); color: #51cf66; }
+    .msg.error { background: rgba(255,107,107,0.1); color: #ff6b6b; }
+    #admin-panel { display: none; }
+  </style>
+</head>
+<body>
+  <div class="header"><h1>Plano Fit — Painel Administrativo</h1></div>
+
+  <div id="login-section" class="login-card" style="display:block">
+    <h2>Login Admin</h2>
+    <input type="password" id="pwd" placeholder="Senha administrativa">
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <div id="login-msg"></div>
+  </div>
+
+  <div id="admin-panel" class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('generate')">Gerar Link</button>
+      <button class="tab" onclick="showTab('tokens')">Tokens</button>
+      <button class="tab" onclick="showTab('logs')">Logs de Acesso</button>
+    </div>
+
+    <div id="tab-generate" class="section">
+      <h2>Gerar Link de Acesso</h2>
+      <div id="gen-msg"></div>
+      <div class="form-row">
+        <input type="text" id="name" placeholder="Nome da pessoa">
+        <input type="number" id="days" value="7" min="1" max="90" style="max-width:100px">
+        <button class="btn-primary" style="width:auto;padding:12px 20px" onclick="generateLink()">Gerar</button>
+      </div>
+      <div id="link-result"></div>
+    </div>
+
+    <div id="tab-tokens" class="section" style="display:none">
+      <h2>Tokens Ativos</h2>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-bottom:16px" onclick="loadTokens()">Atualizar</button>
+      <div id="tokens-table"></div>
+    </div>
+
+    <div id="tab-logs" class="section" style="display:none">
+      <h2>Logs de Acesso</h2>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-bottom:16px" onclick="loadLogs()">Atualizar</button>
+      <div id="logs-table"></div>
+    </div>
+  </div>
+
+  <script>
+    let adminPwd = '';
+
+    function doLogin() {
+      adminPwd = document.getElementById('pwd').value;
+      fetch('/api/admin?action=tokens', {
+        headers: { 'X-Admin-Password': adminPwd }
+      }).then(r => r.json()).then(d => {
+        if (d.error) {
+          document.getElementById('login-msg').innerHTML = '<div class="msg error">' + d.error + '</div>';
+        } else {
+          document.getElementById('login-section').style.display = 'none';
+          document.getElementById('admin-panel').style.display = 'block';
+        }
+      }).catch(() => {
+        document.getElementById('login-msg').innerHTML = '<div class="msg error">Erro de conexão</div>';
+      });
+    }
+
+    function showTab(name) {
+      ['generate','tokens','logs'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+      });
+      document.querySelectorAll('.tab').forEach((el, i) => {
+        el.classList.toggle('active', ['generate','tokens','logs'][i] === name);
+      });
+      if (name === 'tokens') loadTokens();
+      if (name === 'logs') loadLogs();
+    }
+
+    function generateLink() {
+      const name = document.getElementById('name').value.trim();
+      const days = document.getElementById('days').value;
+      const msgEl = document.getElementById('gen-msg');
+      const resEl = document.getElementById('link-result');
+      if (!name) { msgEl.innerHTML = '<div class="msg error">Informe o nome</div>'; return; }
+      msgEl.innerHTML = '';
+      resEl.innerHTML = 'Gerando...';
+      fetch('/api/admin?action=generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPwd },
+        body: JSON.stringify({ name, days })
+      }).then(r => r.json()).then(d => {
+        if (d.ok) {
+          resEl.innerHTML = '<div class="link-box"><strong>Link para ' + name + ':</strong><br><br>' + d.url + '</div>';
+        } else {
+          resEl.innerHTML = '<div class="msg error">' + (d.error || 'Erro') + '</div>';
+        }
+      });
+    }
+
+    function loadTokens() {
+      fetch('/api/admin?action=tokens', { headers: { 'X-Admin-Password': adminPwd } })
+        .then(r => r.json()).then(d => {
+          if (!d.tokens || d.tokens.length === 0) {
+            document.getElementById('tokens-table').innerHTML = '<p style="color:#666">Nenhum token gerado.</p>';
+            return;
+          }
+          let html = '<table><thead><tr><th>Nome</th><th>Criado</th><th>Expira</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
+          d.tokens.forEach(t => {
+            const status = t.revoked === 'true' ? '<span class="badge revoked">Revogado</span>' : '<span class="badge active">Ativo</span>';
+            const revokeBtn = t.revoked !== 'true' ? '<button class="btn-danger" onclick="revokeToken(\''+t.jti+'\')">Revogar</button>' : '';
+            html += '<tr><td>' + t.name + '</td><td>' + (t.created||'').substring(0,10) + '</td><td>' + (t.expires||'').substring(0,10) + '</td><td>' + status + '</td><td>' + revokeBtn + '</td></tr>';
+          });
+          html += '</tbody></table>';
+          document.getElementById('tokens-table').innerHTML = html;
+        });
+    }
+
+    function revokeToken(jti) {
+      if (!confirm('Revogar este token?')) return;
+      fetch('/api/admin?action=revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPwd },
+        body: JSON.stringify({ jti })
+      }).then(r => r.json()).then(d => { if (d.ok) loadTokens(); });
+    }
+
+    function loadLogs() {
+      fetch('/api/admin?action=logs', { headers: { 'X-Admin-Password': adminPwd } })
+        .then(r => r.json()).then(d => {
+          if (!d.logs || d.logs.length === 0) {
+            document.getElementById('logs-table').innerHTML = '<p style="color:#666">Nenhum acesso registrado.</p>';
+            return;
+          }
+          let html = '<table><thead><tr><th>Nome</th><th>IP</th><th>Data/Hora</th></tr></thead><tbody>';
+          d.logs.forEach(l => {
+            html += '<tr><td>' + l.name + '</td><td>' + l.ip + '</td><td>' + new Date(l.at).toLocaleString('pt-BR') + '</td></tr>';
+          });
+          html += '</tbody></table>';
+          document.getElementById('logs-table').innerHTML = html;
+        });
+    }
+
+    document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  </script>
+</body>
+</html>
